@@ -52,6 +52,8 @@ public class SystemSetting extends ReactContextBaseJavaModule implements Activit
     private volatile BroadcastReceiver locationBR;
     private volatile BroadcastReceiver airplaneBR;
 
+    private int previous_notification_interrupt_setting;
+
     public SystemSetting(ReactApplicationContext reactContext) {
         super(reactContext);
         mContext = reactContext;
@@ -271,6 +273,20 @@ public class SystemSetting extends ReactContextBaseJavaModule implements Activit
             flags |= AudioManager.FLAG_SHOW_UI;
         }
         try {
+
+            if(val == 0 && type.equals("ring")) {
+                NotificationManager notificationManager = (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    previous_notification_interrupt_setting = notificationManager.getCurrentInterruptionFilter();
+                    notificationManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_NONE);
+                }
+            } else if( val != 0 && type.equals("ring")){
+                NotificationManager notificationManager = (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    notificationManager.setInterruptionFilter(previous_notification_interrupt_setting);
+                }
+            }
+
             am.setStreamVolume(volType, (int) (val * am.getStreamMaxVolume(volType)), flags);
         } catch (SecurityException e) {
             if (val == 0) {
